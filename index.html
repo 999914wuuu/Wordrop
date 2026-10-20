@@ -158,8 +158,8 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end}
   .layout{display:grid;grid-template-columns:minmax(360px,42%) 1fr;align-items:start}
   .list{grid-template-columns:1fr;padding:16px 18px 40px}
   .scrim{display:none}
-  .folder{position:sticky;top:calc(env(safe-area-inset-top,0px) + 92px);height:calc(100vh - env(safe-area-inset-top,0px) - 108px);
-    transform:none;transition:none;padding:16px 18px 0 0}
+  .folder{position:fixed;top:var(--ftop,120px);bottom:calc(16px + env(safe-area-inset-bottom,0px));right:18px;left:auto;
+    width:calc(58% - 36px);height:auto;transform:none;transition:none;padding:0}
   .grab{display:none}
   .folder:not(.on) .panel,.folder:not(.on) .tab{visibility:hidden}
 }
@@ -368,7 +368,7 @@ function zhFor(parts, s, e){
     .map(c => c.text).join(' ').replace(/\s+/g,'，').replace(/，([，。？！、…])/g,'$1');
 }
 
-const VERSION = '2026.10.20-4';
+const VERSION = '2026.10.20-5';
 
 // ===== 連線 =====
 const $ = (id) => document.getElementById(id);
@@ -906,6 +906,13 @@ $('folder').addEventListener('touchend', (e) => {
   else if (dy > 90 && $('scroll').scrollTop <= 0 && Math.abs(dy) > Math.abs(dx) * 1.5) close();
 }, { passive: true });
 $('shot').onclick = () => window.open($('shot').src, '_blank');
+// 寬螢幕:資料夾固定在右側,上緣貼著篩選列下方,按鈕永遠看得到
+function placeFolder() {
+  const top = Math.max($('bar').getBoundingClientRect().bottom + 12, 12);
+  document.documentElement.style.setProperty('--ftop', top + 'px');
+}
+addEventListener('scroll', placeFolder, { passive: true });
+addEventListener('resize', placeFolder);
 new IntersectionObserver(([en]) => $('bar').classList.toggle('collapsed', !en.isIntersecting), { rootMargin: '-60px 0px 0px 0px' }).observe($('cover'));
 
 // 舊版收集的資料沒有 source、videoId,這裡補上
@@ -929,7 +936,7 @@ async function boot() {
     await cleanup();
     // 先把會出現在列表上的美劇卡準備好(對字幕)
     await Promise.all(live().filter((x) => x.source === 'drama').map((x) => prepare(x).catch(() => {})));
-    render();
+    render(); placeFolder();
     if (matchMedia('(min-width:1000px)').matches && live()[0]) open(live()[0].id);
   } catch (e) {
     $('app').hidden = true; $('setup').hidden = false;
