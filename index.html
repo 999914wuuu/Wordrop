@@ -390,7 +390,7 @@ let filter = 'all', cur = null;
 const sel = { A: [], B: [] };
 const subs = {};      // videoId -> { units, zh }
 const imgs = {};      // id -> objectURL
-const SRC_NAME = { drama: '美劇', game: '遊戲', web: '網頁' };
+const SRC_NAME = { drama: '影片字幕', game: '遊戲', web: '網頁' };
 function pending(x) { return (x.quote && !x.quoteExported) || (x.source === 'game' && x.added.length && !x.plurkExported); }
 const UI_WORDS = /^(剪輯|播放速度.*|集數|音訊和字幕|下一集|全螢幕|略過片頭|\d{1,2}:\d{2}(:\d{2})?|[<>‹›×✕]+)$/;
 
@@ -491,7 +491,7 @@ function sentence(x) {
   return { a: x.context || x.text, b: '', s: 0, ok: true };
 }
 function sourceLabel(x) {
-  if (x.source === 'drama') return `${x.show || '美劇'}${x.ep ? ' ' + x.ep : ''}`;
+  if (x.source === 'drama') return `${x.show || '影片'}${x.ep ? ' ' + x.ep : ''}`;
   if (x.source === 'game') return `${x.game || '遊戲'}${x.story ? '【' + x.story + '】' : ''}`;
   return x.title || '網頁';
 }
@@ -900,6 +900,7 @@ new IntersectionObserver(([en]) => $('bar').classList.toggle('collapsed', !en.is
 function normalize(x, i) {
   const y = { added: [], ocr: [], ...x, color: i % 5 };
   if (!y.source) y.source = y.type === 'netflix' || y.type === 'ocr' ? 'drama' : 'web';
+  if (y.source === 'sub') y.source = 'drama';   // 捷徑送來的 sub 就是影片字幕
   if (!y.videoId) y.videoId = (String(y.url || '').match(/watch\/(\d+)/) || [])[1] || '';
   y.added = (y.added || []).map((w) => (typeof w === 'string' ? { en: w } : w));
   return y;
