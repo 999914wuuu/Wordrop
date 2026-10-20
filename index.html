@@ -1,0 +1,920 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<title>Wordrop</title>
+<meta name="apple-mobile-web-app-title" content="Wordrop">
+<link rel="icon" type="image/svg+xml" href="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA2NCA2NCI+CiAgPGcgdHJhbnNmb3JtPSJ0cmFuc2xhdGUoMzIgMzIpIHJvdGF0ZSgtMjApIj4KICAgIDxwYXRoIGQ9Ik0tMTUgMCBMLTMwIC0xMSBMLTI3IDAgTC0zMCAxMSBaIiBmaWxsPSIjRTg4MzNBIiBzdHJva2U9IiNFODgzM0EiIHN0cm9rZS13aWR0aD0iMiIgc3Ryb2tlLWxpbmVqb2luPSJyb3VuZCIvPgogICAgPHBhdGggZD0iTTE1IDAgTDMwIC0xMSBMMjcgMCBMMzAgMTEgWiIgZmlsbD0iI0U4ODMzQSIgc3Ryb2tlPSIjRTg4MzNBIiBzdHJva2Utd2lkdGg9IjIiIHN0cm9rZS1saW5lam9pbj0icm91bmQiLz4KICAgIDxjaXJjbGUgcj0iMTciIGZpbGw9IiNFRUM2NEEiLz4KICAgIDxwYXRoIGQ9Ik0tNyAtMTUgUTQgMCAtNyAxNSBNNSAtMTYgUTE2IDAgNSAxNiIgc3Ryb2tlPSIjRTg4MzNBIiBzdHJva2Utd2lkdGg9IjQiIGZpbGw9Im5vbmUiIHN0cm9rZS1saW5lY2FwPSJyb3VuZCIvPgogICAgPGNpcmNsZSBjeD0iLTkiIGN5PSItOCIgcj0iMy41IiBmaWxsPSIjZmZmIiBvcGFjaXR5PSIuOCIvPgogIDwvZz4KPC9zdmc+">
+<link rel="apple-touch-icon" href="apple-touch-icon.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Zen+Maru+Gothic:wght@500;700;900&display=swap" rel="stylesheet">
+<style>
+:root{
+  --paper:#F2E8D8; --sheet:#FBF5EA; --ink:#3B2A22; --mute:#8B7563; --line:#E3D3BC;
+  --red:#D63A2C; --orange:#E8833A; --mustard:#EEC64A; --green:#5BAF78; --pink:#EE78EE;
+  --on-red:#FBF5EA;
+  color-scheme:light;
+  box-sizing:border-box;
+  padding-top:env(safe-area-inset-top,0px);
+  padding-bottom:env(safe-area-inset-bottom,0px);
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --paper:#2A1F1A; --sheet:#35281F; --ink:#F2E8D8; --mute:#B39C88; --line:#4A392E;
+    --red:#EE5A49; --orange:#E28A4A; --mustard:#D9B444; --green:#5FA77A; --pink:#D97BD9;
+    --on-red:#2A1F1A; color-scheme:dark;
+  }
+}
+:root[data-theme="dark"]{
+  --paper:#2A1F1A; --sheet:#35281F; --ink:#F2E8D8; --mute:#B39C88; --line:#4A392E;
+  --red:#EE5A49; --orange:#E28A4A; --mustard:#D9B444; --green:#5FA77A; --pink:#D97BD9;
+  --on-red:#2A1F1A; color-scheme:dark;
+}
+*,*::before,*::after{box-sizing:inherit}
+html{scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--paper);color:var(--ink);
+  font:500 16px/1.6 "Zen Maru Gothic","PingFang TC","Noto Sans TC",sans-serif;
+  -webkit-tap-highlight-color:transparent}
+body::before{content:"";position:fixed;inset:0 0 auto;height:env(safe-area-inset-top,0px);z-index:30;background:var(--red)}
+button{font:inherit;color:inherit;background:none;border:0;cursor:pointer;padding:0}
+button:focus-visible,input:focus-visible,select:focus-visible{outline:3px solid var(--mustard);outline-offset:2px}
+
+/* 跑馬燈 */
+.marquee{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--red);color:var(--on-red);
+  overflow:hidden;white-space:nowrap;font-weight:700;font-size:13px;height:28px;line-height:28px}
+.marquee span{display:inline-block;padding-left:100%;animation:run 38s linear infinite}
+@keyframes run{to{transform:translateX(-100%)}}
+@media (prefers-reduced-motion:reduce){.marquee span{animation:none;padding-left:16px}}
+
+/* 封面 */
+.cover{display:flex;align-items:flex-end;justify-content:space-between;gap:12px;
+  padding:18px 18px 14px;border-bottom:2px solid var(--red)}
+.title{font-family:Anton,Impact,sans-serif;color:var(--red);font-size:clamp(56px,17vw,96px);line-height:.86;
+  letter-spacing:.01em;margin:0}
+.title small{display:block;font:700 14px/1.4 "Zen Maru Gothic",sans-serif;color:var(--ink);letter-spacing:0;margin-top:8px}
+.count{text-align:right;color:var(--red);flex:none}
+.count b{font-family:Anton,Impact,sans-serif;font-size:46px;line-height:1;font-weight:400}
+.count div{font-size:13px;font-weight:700;color:var(--ink)}
+
+/* 收起後的頂欄 */
+.bar{position:sticky;top:calc(env(safe-area-inset-top,0px) + 28px);z-index:19;background:var(--paper);
+  border-bottom:2px solid var(--red)}
+.mini{display:none;align-items:center;justify-content:space-between;padding:8px 18px 0}
+.mini b{font-family:Anton,Impact,sans-serif;color:var(--red);font-size:24px;font-weight:400}
+.mini span{font-size:13px;font-weight:700}
+.collapsed .mini{display:flex}
+.pills{display:flex;gap:8px;overflow-x:auto;padding:10px 18px 12px;scrollbar-width:none}
+.pills::-webkit-scrollbar{display:none}
+.pill{flex:none;border:2px solid var(--red);color:var(--red);border-radius:999px;padding:5px 14px;font-weight:700;font-size:14px;min-height:36px}
+.pill[aria-pressed="true"]{background:var(--red);color:var(--on-red)}
+.pill.quote{margin-left:auto;border-style:dashed}
+
+/* 列表 */
+.layout{display:block}
+.list{list-style:none;margin:0;padding:12px 12px 120px;display:grid;gap:10px}
+.card{display:grid;grid-template-columns:76px 1fr;min-height:84px;border-radius:18px;overflow:hidden;
+  background:var(--sheet);border:2px solid var(--line);text-align:left;width:100%;position:relative}
+.card[aria-current="true"]{border-color:var(--red)}
+.swatch{display:flex;flex-direction:column;justify-content:center;align-items:center;font-weight:900;font-size:13px;line-height:1.2;color:#3B2A22}
+.swatch b{font-family:Anton,Impact,sans-serif;font-weight:400;font-size:22px}
+.c0{background:var(--orange)}.c1{background:var(--mustard)}.c2{background:var(--red);color:var(--on-red)}
+.c3{background:var(--green)}.c4{background:var(--pink)}
+.c2 .swatch,.swatch.c2{color:#FBF5EA}
+.body{padding:12px 14px;display:flex;flex-direction:column;justify-content:center;gap:2px;min-width:0}
+.body .en{font-weight:700;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden}
+.body .zh{font-size:13px;color:var(--mute);white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.done{font-size:12px;color:var(--green);font-weight:700}
+.flower-badge{position:absolute;top:8px;right:8px;width:20px;height:20px}
+
+/* 資料夾面板 */
+.scrim{position:fixed;inset:0;background:rgba(40,25,18,.35);opacity:0;pointer-events:none;transition:opacity .2s;z-index:40}
+.scrim.on{opacity:1;pointer-events:auto}
+.folder{position:fixed;left:0;right:0;bottom:0;top:calc(env(safe-area-inset-top,0px) + 40px);z-index:41;
+  transform:translateY(105%);transition:transform .28s cubic-bezier(.2,.8,.2,1);display:flex;flex-direction:column}
+.folder.on{transform:none}
+.tab{align-self:flex-start;margin-left:14px;background:var(--sheet);color:var(--red);font-weight:900;font-size:14px;
+  padding:8px 18px 6px;border-radius:16px 16px 0 0;border:2px solid var(--red);border-bottom:0;position:relative;top:2px}
+.panel{flex:1;background:var(--sheet);border:2px solid var(--red);border-radius:0 22px 0 0;display:flex;flex-direction:column;min-height:0}
+.grab{height:22px;display:flex;justify-content:center;align-items:center}
+.grab i{width:44px;height:5px;border-radius:9px;background:var(--line)}
+.scroll{flex:1;overflow-y:auto;padding:4px 18px 18px;-webkit-overflow-scrolling:touch}
+.hint{font-size:13px;color:var(--mute);margin:0 0 8px}
+.tokens{display:flex;flex-wrap:wrap;gap:6px;margin:0 0 14px}
+.tok{min-height:40px;padding:4px 10px;border-radius:12px;background:var(--paper);font-size:18px;font-weight:700;border:2px solid transparent}
+.tok.zh{min-width:36px;padding:4px 6px;font-size:18px}
+.tok.punct{background:none;padding:4px 2px;color:var(--mute);pointer-events:none}
+.tok.sel{background:var(--red);color:var(--on-red)}
+.tok.got{text-decoration:underline 3px var(--green);text-underline-offset:5px}
+.range{display:flex;gap:6px;flex-wrap:wrap;margin:2px 0 12px}
+.range .small{min-height:34px;padding:4px 12px;font-size:13px}
+.small.ghost{border-color:var(--line);color:var(--mute)}
+.tok.edge{border-color:var(--ink)}
+.field{display:grid;grid-template-columns:62px 1fr auto;align-items:center;gap:8px;margin:8px 0}
+.field label{font-weight:900;color:var(--red);font-size:14px}
+.field input,.field select{width:100%;min-height:44px;border:2px solid var(--line);border-radius:14px;background:var(--paper);
+  color:var(--ink);font:inherit;font-size:17px;padding:6px 12px}
+.small{border:2px solid var(--red);color:var(--red);border-radius:999px;padding:6px 12px;font-weight:700;font-size:14px;min-height:40px}
+.flags{display:flex;gap:8px;flex-wrap:wrap;margin:12px 0 6px}
+.flag{border:2px dashed var(--red);color:var(--red);border-radius:999px;padding:4px 12px;font-size:13px;font-weight:700;min-height:34px}
+.flag[aria-pressed="false"]{border-style:solid;border-color:var(--line);color:var(--mute);text-decoration:line-through}
+.memo{white-space:pre-wrap;font-size:13px;color:var(--mute);background:var(--paper);border-radius:14px;padding:10px 12px;margin:6px 0 0}
+.added{display:flex;flex-wrap:wrap;gap:6px;margin:12px 0 0}
+.added span{background:var(--green);color:#1F2B22;border-radius:999px;padding:2px 12px;font-size:13px;font-weight:700}
+.actions{display:grid;grid-template-columns:56px 1fr 1fr;gap:10px;padding:12px 18px calc(12px + env(safe-area-inset-bottom,0px));
+  border-top:2px solid var(--line)}
+.flowerbtn{height:52px;border-radius:16px;border:2px solid var(--line);display:grid;place-items:center}
+.flowerbtn[aria-pressed="true"]{border-color:var(--pink);background:color-mix(in srgb,var(--pink) 22%,transparent)}
+.btn{height:52px;border-radius:16px;font-weight:900;font-size:17px;border:2px solid var(--red);color:var(--red)}
+.btn.main{background:var(--red);color:var(--on-red)}
+.nav{display:flex;gap:6px;margin-left:auto;margin-right:10px;align-self:flex-end;padding-bottom:4px}
+.nav button{width:36px;height:32px;border-radius:10px;color:var(--red);font-weight:900}
+
+/* 空狀態 */
+.empty{display:none;flex-direction:column;align-items:center;gap:8px;padding:60px 20px;text-align:center;color:var(--mute)}
+.empty.on{display:flex}
+.empty svg{width:120px;height:150px}
+
+/* 匯出 Quote */
+dialog{border:2px solid var(--red);border-radius:22px;background:var(--sheet);color:var(--ink);padding:18px;width:min(92vw,560px)}
+dialog::backdrop{background:rgba(40,25,18,.4)}
+dialog h2{margin:0 0 10px;color:var(--red);font-size:18px}
+dialog pre{white-space:pre-wrap;font:500 14px/1.7 "Zen Maru Gothic",sans-serif;background:var(--paper);border-radius:14px;padding:12px;margin:0 0 12px;max-height:50vh;overflow:auto}
+dialog .row{display:flex;gap:10px;justify-content:flex-end}
+
+.toast{position:fixed;left:50%;bottom:calc(96px + env(safe-area-inset-bottom,0px));transform:translate(-50%,20px);opacity:0;
+  background:var(--ink);color:var(--paper);padding:10px 18px;border-radius:999px;font-weight:700;transition:.2s;z-index:60;pointer-events:none}
+.toast.on{opacity:1;transform:translate(-50%,0)}
+
+/* iPad 直式:兩欄卡片 */
+@media (min-width:700px){
+  .list{grid-template-columns:1fr 1fr;padding:16px 18px 120px}
+  .cover{padding:26px 24px 18px}
+}
+/* iPad 橫式:左列表、右資料夾 */
+@media (min-width:1000px){
+  .layout{display:grid;grid-template-columns:minmax(360px,42%) 1fr;align-items:start}
+  .list{grid-template-columns:1fr;padding:16px 18px 40px}
+  .scrim{display:none}
+  .folder{position:sticky;top:calc(env(safe-area-inset-top,0px) + 92px);height:calc(100vh - env(safe-area-inset-top,0px) - 108px);
+    transform:none;transition:none;padding:16px 18px 0 0}
+  .grab{display:none}
+  .folder:not(.on) .panel,.folder:not(.on) .tab{visibility:hidden}
+}
+.icon{width:40px;height:40px;border-radius:12px;color:var(--red);font-size:20px;display:grid;place-items:center}
+.cover .right{display:flex;flex-direction:column;align-items:flex-end;gap:6px}
+.shot{display:block;width:100%;border-radius:14px;margin:0 0 12px;background:var(--paper);min-height:80px;object-fit:contain}
+.lines{display:grid;gap:6px;margin:0 0 12px}
+.line{text-align:left;padding:8px 12px;border-radius:12px;border:2px solid var(--line);background:var(--paper);font-size:15px}
+.line[aria-pressed="true"]{border-color:var(--red)}
+.field textarea{width:100%;min-height:72px;border:2px solid var(--line);border-radius:14px;background:var(--paper);color:var(--ink);font:inherit;font-size:16px;padding:8px 12px;resize:vertical}
+.group{border-top:2px dashed var(--line);margin-top:14px;padding-top:10px}
+.group h3{margin:0 0 8px;font-size:14px;color:var(--red)}
+.warn{background:var(--paper);border-radius:14px;padding:10px 12px;font-size:14px;margin:0 0 12px}
+.setup{max-width:420px;margin:12vh auto 0;padding:0 20px}
+.setup input,.dlg-input{width:100%;min-height:44px;border:2px solid var(--line);border-radius:14px;background:var(--sheet);color:var(--ink);font:inherit;padding:6px 12px;margin:4px 0 12px}
+.setup label,dialog label{font-weight:900;color:var(--red);font-size:14px}
+.post{background:var(--paper);border-radius:14px;padding:12px;margin:0 0 12px}
+.post pre{background:none;padding:0;margin:0 0 10px;max-height:none}
+.thumbs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
+.thumbs img{width:88px;height:56px;object-fit:cover;border-radius:10px}
+[hidden]{display:none!important}
+</style>
+</head>
+<body>
+<div class="setup" id="setup" hidden>
+  <h1 class="title" style="font-size:64px">WORDROP<small>字幕收集箱</small></h1>
+  <label for="sUrl">Worker 網址</label>
+  <input id="sUrl" placeholder="https://xxx.workers.dev" autocapitalize="off" autocomplete="off">
+  <label for="sPass">通行碼</label>
+  <input id="sPass" type="password">
+  <button class="btn main" id="sSave" style="width:100%">連線</button>
+  <p class="hint" id="sMsg"></p>
+</div>
+
+<div id="app" hidden>
+<div class="marquee" aria-hidden="true"><span id="marquee"></span></div>
+
+<header class="cover" id="cover">
+  <h1 class="title">WORDROP<small>字幕收集箱</small></h1>
+  <div class="count"><b id="countBig">0</b><div>句待整理</div></div>
+</header>
+
+<div class="bar" id="bar">
+  <div class="mini"><b>WORDROP</b><span id="countMini"></span></div>
+  <nav class="pills" id="pills"></nav>
+</div>
+
+<main class="layout">
+  <ul class="list" id="list"></ul>
+
+  <div class="scrim" id="scrim"></div>
+  <section class="folder" id="folder" aria-label="整理這一句">
+    <div style="display:flex">
+      <div class="tab" id="tab"></div>
+      <div class="nav"><button id="prev" aria-label="上一句">‹</button><button id="next" aria-label="下一句">›</button></div>
+    </div>
+    <div class="panel">
+      <div class="grab"><i></i></div>
+      <div class="scroll" id="scroll">
+        <div id="gameBox" hidden>
+          <div class="field"><label for="fGame">遊戲</label><select id="fGame"></select><span></span></div>
+          <div class="field"><label for="fStory">故事</label><input id="fStory" list="storyList" autocomplete="off"><span></span></div>
+          <datalist id="storyList"></datalist>
+          <div class="field"><label for="fStoryDate">日期</label><input id="fStoryDate" placeholder="2018/3/31" autocomplete="off"><span></span></div>
+        </div>
+        <div id="epBox" hidden class="warn">
+          找不到對應的字幕。<br>
+          <select id="fEp" class="dlg-input" style="margin:8px 0 0"></select>
+        </div>
+        <img class="shot" id="shot" alt="截圖" hidden>
+        <div class="lines" id="lines" hidden></div>
+        <div class="range" id="range">
+          <button class="small" id="rPrev">上句</button>
+          <button class="small" id="rAddPrev">接前</button>
+          <button class="small" id="rAddNext">接後</button>
+          <button class="small" id="rNext">下句</button>
+          <button class="small ghost" id="rReset">還原</button>
+        </div>
+        <p class="hint">點兩個字選範圍,點同一個字只選一個字</p>
+        <div class="tokens" id="tokA"></div>
+        <div class="tokens" id="tokB"></div>
+
+        <div class="field" id="rowEn"><label for="fEn">en</label><input id="fEn" autocomplete="off" autocapitalize="off"><span></span></div>
+        <div class="field"><label for="fJp">jp</label><input id="fJp" autocomplete="off" lang="ja"><button class="small" id="paste">貼上</button></div>
+        <div class="field"><label for="fRead">讀音</label><input id="fRead" autocomplete="off" lang="ja"><span></span></div>
+        <div class="field"><label for="fZh">zh-tw</label><input id="fZh" autocomplete="off"><span></span></div>
+        <div class="field"><label for="fNote">筆記</label><textarea id="fNote"></textarea><span></span></div>
+        <div class="field"><label for="fSrc">Source</label><select id="fSrc"></select><span></span></div>
+
+        <div class="flags">
+          <button class="flag" id="flagZh" aria-pressed="true">中文未確認</button>
+          <button class="flag" id="flagJp" aria-pressed="true">日文待查證</button>
+        </div>
+        <div class="memo" id="memo"></div>
+        <div class="added" id="added"></div>
+
+        <div class="field" id="rowThought" style="margin-top:14px"><label for="fThought">感想</label><textarea id="fThought" placeholder="發噗時放在最後"></textarea><span></span></div>
+        <button class="small ghost" id="del" style="margin-top:18px">刪除這張</button>
+      </div>
+      <div class="actions">
+        <button class="flowerbtn" id="quoteBtn" aria-pressed="false" aria-label="標成 Quote"></button>
+        <button class="btn main" id="send">送出</button>
+        <button class="btn" id="finish">整理完</button>
+      </div>
+    </div>
+  </section>
+</main>
+
+<div class="empty" id="empty"></div>
+</div>
+
+<dialog id="dlg">
+  <h2 id="dlgTitle"></h2>
+  <div id="dlgBody"></div>
+  <div class="row"><button class="small" id="dlgClose">關閉</button></div>
+</dialog>
+
+<dialog id="setDlg">
+  <h2>設定</h2>
+  <label for="gUrl">Worker 網址</label><input id="gUrl" class="dlg-input" autocapitalize="off">
+  <label for="gPass">通行碼</label><input id="gPass" class="dlg-input" type="password">
+  <label for="gGames">遊戲與噗浪標籤</label>
+  <textarea id="gGames" class="dlg-input" rows="3" placeholder="あんスタ = # あんスタ # 合奏 # ズ！故事讀書日記"></textarea>
+  <p class="hint">一行一款遊戲。等號右邊是噗文的第一行。</p>
+  <label for="gSources">Source 選項</label>
+  <input id="gSources" class="dlg-input" placeholder="作品,接案工作&準備,新聞,生活">
+  <p class="hint">和 Notion 的 Source 選項一致,用逗號分開。</p>
+  <div class="row"><button class="small" id="setClose">取消</button><button class="small" id="setSave" style="background:var(--red);color:var(--on-red)">儲存</button></div>
+</dialog>
+
+<div class="toast" id="toast"></div>
+
+<script>
+// ===== 字幕處理:解析 SRT、合併成完整句子、對中文 =====
+function parseSrt(text){
+  return text.replace(/\r/g,'').trim().split(/\n\s*\n/).map(b => {
+    const l = b.split('\n');
+    const i = l.findIndex(x => x.includes('-->'));
+    if (i < 0) return null;
+    const m = l[i].match(/(\d+):(\d+):(\d+)[,.](\d+)\s*-->\s*(\d+):(\d+):(\d+)[,.](\d+)/);
+    if (!m) return null;
+    const g = m.slice(1).map(Number);
+    return { s:g[0]*3600+g[1]*60+g[2]+g[3]/1000, e:g[4]*3600+g[5]*60+g[6]+g[7]/1000, t:l.slice(i+1).join('<br>') };
+  }).filter(Boolean);
+}
+const cleanLine = (t) => t.replace(/\[[^\]]*\]/g,'').replace(/<[^>]+>/g,' ').replace(/♪/g,'').replace(/\s+/g,' ').trim();
+
+// 英文:每個 cue 依說話者(開頭的 -)拆段,再把段落接成完整句子
+function buildUnits(cues){
+  const parts = [];
+  for (const c of cues){
+    if (/^\s*♪|♪\s*$/.test(c.t)) continue;
+    const local = [];
+    for (const raw of c.t.split(/<br>/i)){
+      const isNew = /^\s*-/.test(raw);
+      const txt = cleanLine(raw.replace(/^\s*-\s*/,''));
+      if (isNew || !local.length) local.push({ text:txt, speakerStart:isNew });
+      else local[local.length - 1].text = (local[local.length - 1].text + ' ' + txt).trim();
+    }
+    const kept = local.filter(p => p.text);
+    const d = (c.e - c.s) / (kept.length || 1);
+    kept.forEach((p,i) => parts.push({ ...p, s:c.s + d*i, e:c.s + d*(i+1) }));
+  }
+  const units = [];
+  let cur = null;
+  const ends = (t) => /([.!?]["”’)]?|--|…)$/.test(t);
+  for (const p of parts){
+    const gap = cur ? p.s - cur.e : 0;
+    if (!cur || ends(cur.text) || p.speakerStart || gap > 2){
+      if (cur) units.push(cur);
+      cur = { s:p.s, e:p.e, text:p.text };
+    } else { cur.e = p.e; cur.text += ' ' + p.text; }
+  }
+  if (cur) units.push(cur);
+  return units;
+}
+
+// 取開始時間不晚於 t 的最後一句(多人對話的 cue 已依行數平分時間)
+function unitAt(units, t){
+  let best = 0;
+  units.forEach((u,i) => { if (u.s <= t + 0.3) best = i; });
+  return best;
+}
+
+// 中文:多人對話的 cue 依行數平分時間,再挑和英文句子重疊一半以上的
+function zhParts(zhCues){
+  const out = [];
+  for (const c of zhCues){
+    const lines = c.t.split(/<br>/i);
+    const multi = lines.filter(x => /^\s*-/.test(x)).length > 1;
+    if (!multi){ out.push({ s:c.s, e:c.e, text:cleanLine(lines.join(' ').replace(/^\s*-\s*/,'')) }); continue; }
+    const d = (c.e - c.s) / lines.length;
+    lines.forEach((x,i) => out.push({ s:c.s + d*i, e:c.s + d*(i+1), text:cleanLine(x.replace(/^\s*-\s*/,'')) }));
+  }
+  return out.filter(p => p.text);
+}
+function zhFor(parts, s, e){
+  return parts.filter(c => {
+      const ov = Math.min(e, c.e) - Math.max(s, c.s);
+      return ov > 0 && (ov >= (c.e - c.s) * 0.5 || ov >= (e - s) * 0.5);
+    })
+    .map(c => c.text).join(' ').replace(/\s+/g,'，').replace(/，([，。？！、…])/g,'$1');
+}
+
+// ===== 連線 =====
+const $ = (id) => document.getElementById(id);
+const store = {
+  get: (k, d = '') => { try { return localStorage.getItem('subbox:' + k) ?? d; } catch { return d; } },
+  set: (k, v) => { try { localStorage.setItem('subbox:' + k, v); } catch {} },
+};
+let BASE = store.get('url').replace(/\/+$/, ''), PASS = store.get('pass');
+
+async function api(path, opts = {}) {
+  const r = await fetch(BASE + path, {
+    ...opts,
+    headers: { 'X-Passcode': PASS, ...(opts.body && typeof opts.body === 'string' && opts.json !== false ? { 'Content-Type': 'application/json' } : {}), ...(opts.headers || {}) },
+  });
+  const type = r.headers.get('content-type') || '';
+  const data = type.includes('json') ? await r.json() : opts.blob ? await r.blob() : await r.text();
+  if (!r.ok) throw new Error((data && data.error) || r.status);
+  return data;
+}
+const send = (path, method, body) => api(path, { method, body: JSON.stringify(body) });
+
+// ===== 狀態 =====
+let items = [], srtIndex = {}, settings = { games: [], sources: ['作品', '接案工作&準備', '新聞', '生活'] }, stories = {};
+let filter = 'all', cur = null;
+const sel = { A: [], B: [] };
+const subs = {};      // videoId -> { units, zh }
+const imgs = {};      // id -> objectURL
+const SRC_NAME = { drama: '美劇', game: '遊戲', web: '網頁' };
+const UI_WORDS = /^(剪輯|播放速度.*|集數|音訊和字幕|下一集|全螢幕|略過片頭|\d{1,2}:\d{2}(:\d{2})?|[<>‹›×✕]+)$/;
+
+const live = () => items.filter((x) => !x.done);
+const shownList = () => live().filter((x) => filter === 'all' || x.source === filter);
+const today = () => { const d = new Date(); return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`; };
+const readDate = (x) => { const d = new Date(x.createdAt); return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`; };
+const mmss = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
+const hasJa = (s) => /[\u3040-\u30ff]/.test(s);
+const hasCJK = (s) => /[\u3040-\u30ff\u4e00-\u9fff]/.test(s);
+const esc = (s) => String(s ?? '').replace(/[&<>"]/g, (c) => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
+
+function toast(t) { const el = $('toast'); el.textContent = t; el.classList.add('on'); clearTimeout(el._t); el._t = setTimeout(() => el.classList.remove('on'), 1800); }
+
+// ===== 字幕 =====
+async function loadSubs(videoId) {
+  if (subs[videoId]) return subs[videoId];
+  const langs = srtIndex[videoId]?.langs || [];
+  const [en, zh] = await Promise.all([
+    langs.includes('en') ? api(`/srt/${videoId}/en`).catch(() => '') : '',
+    langs.includes('zh') ? api(`/srt/${videoId}/zh`).catch(() => '') : '',
+  ]);
+  subs[videoId] = { units: en ? buildUnits(parseSrt(en)) : [], zh: zh ? zhParts(parseSrt(zh)) : [] };
+  return subs[videoId];
+}
+
+// 截圖辨識的中文字幕 → 找出是哪一集、第幾秒
+const norm = (s) => String(s).replace(/[^\p{L}\p{N}]/gu, '');
+function dice(a, b) {
+  a = norm(a); b = norm(b);
+  if (a.length < 2 || b.length < 2) return a && a === b ? 1 : 0;
+  const grams = (s) => { const m = new Map(); for (let i = 0; i < s.length - 1; i++) { const g = s.slice(i, i + 2); m.set(g, (m.get(g) || 0) + 1); } return m; };
+  const A = grams(a), B = grams(b); let hit = 0;
+  for (const [g, n] of A) hit += Math.min(n, B.get(g) || 0);
+  return (2 * hit) / (a.length - 1 + b.length - 1);
+}
+function ocrCandidates(x) { return (x.ocr || []).filter((l) => !UI_WORDS.test(l) && !/第\s*\d+\s*季.*第\s*\d+\s*集/.test(l) && norm(l).length >= 3); }
+
+async function resolveOcr(x, onlyVideoId) {
+  const lines = ocrCandidates(x);
+  if (!lines.length) return false;
+  let ids = Object.keys(srtIndex).filter((id) => (srtIndex[id].langs || []).includes('zh'));
+  if (onlyVideoId) ids = [onlyVideoId];
+  else {
+    const m = (x.ocr || []).join(' ').match(/第\s*(\d+)\s*季.*?第\s*(\d+)\s*集/);
+    if (m) {
+      const ep = 'S' + m[1].padStart(2, '0') + 'E' + m[2].padStart(2, '0');
+      const hit = ids.filter((id) => srtIndex[id].ep === ep);
+      if (hit.length) ids = hit;
+    }
+  }
+  let best = { score: 0 };
+  for (const id of ids) {
+    const { zh } = await loadSubs(id);
+    zh.forEach((p, i) => {
+      const joined = zh[i + 1] ? p.text + zh[i + 1].text : p.text;
+      for (const l of lines) {
+        const s = Math.max(dice(l, p.text), dice(l, joined) * 0.98);
+        if (s > best.score) best = { score: s, id, t: p.s + 0.05 };
+      }
+    });
+  }
+  if (best.score < (onlyVideoId ? 0.3 : 0.45)) return false;
+  Object.assign(x, { videoId: best.id, time: best.t, show: srtIndex[best.id].show, ep: srtIndex[best.id].ep });
+  send('/captures', 'PATCH', [{ id: x.id, videoId: x.videoId, time: x.time, show: x.show, ep: x.ep }]).catch(() => {});
+  return true;
+}
+
+async function prepare(x) {
+  if (x.source !== 'drama') return;
+  if (!x.videoId && x.type === 'ocr' && !x._tried) { x._tried = true; await resolveOcr(x); }
+  if (x.videoId && srtIndex[x.videoId]) {
+    const s = await loadSubs(x.videoId);
+    if (s.units.length && x.base == null) {
+      x.base = unitAt(s.units, x.time || 0);
+      if (x.ui == null) { x.ui = x.base; x.uj = x.base; }
+    }
+  }
+}
+
+// ===== 每張卡的內容 =====
+function sentence(x) {
+  if (x.source === 'drama') {
+    const s = subs[x.videoId];
+    if (s && s.units.length && x.ui != null) {
+      const us = s.units.slice(x.ui, x.uj + 1);
+      const st = us[0].s, ed = us[us.length - 1].e;
+      return { a: us.map((u) => u.text).join(' '), b: zhFor(s.zh, st, ed), s: st, ok: true };
+    }
+    const line = ocrCandidates(x)[0] || x.text || '';
+    return { a: line, b: '', s: x.time || 0, ok: false };
+  }
+  if (x.source === 'game') {
+    const ls = x.ocr || [];
+    const i = x.line ?? ls.reduce((bi, l, k) => (l.length > (ls[bi] || '').length ? k : bi), 0);
+    return { a: ls[i] || '', b: '', s: 0, ok: true };
+  }
+  return { a: x.context || x.text, b: '', s: 0, ok: true };
+}
+function sourceLabel(x) {
+  if (x.source === 'drama') return `${x.show || '美劇'}${x.ep ? ' ' + x.ep : ''}`;
+  if (x.source === 'game') return `${x.game || '遊戲'}${x.story ? '【' + x.story + '】' : ''}`;
+  return x.title || '網頁';
+}
+// 這張卡點選的字要填到哪個欄位
+function targets(x) {
+  const st = sentence(x);
+  if (x.source === 'drama') return st.ok ? ['fEn', 'fZh'] : ['fZh', null];
+  if (x.source === 'game') return ['fJp', null];
+  return [hasJa(st.a) || hasCJK(st.a) ? 'fJp' : 'fEn', null];
+}
+
+// ===== 列表 =====
+const qList = () => items.filter((x) => x.quote && !x.quoteExported);
+const plurkList = () => items.filter((x) => x.source === 'game' && x.added.length && !x.plurkExported);
+
+function renderPills() {
+  const srcs = [...new Set(live().map((x) => x.source))];
+  const q = qList().length, pg = new Set(plurkList().map((x) => x.story + readDate(x))).size;
+  $('pills').innerHTML = [['all', '全部'], ...srcs.map((s) => [s, SRC_NAME[s] || s])]
+    .map(([k, l]) => `<button class="pill" data-k="${k}" aria-pressed="${filter === k}">${l}</button>`).join('')
+    + `<button class="pill quote" id="expQ">匯出 Quote${q ? ' ' + q : ''}</button>`
+    + `<button class="pill quote" id="expP" style="margin-left:0">匯出噗浪${pg ? ' ' + pg : ''}</button>`
+    + `<button class="pill" id="gear" aria-label="設定" style="border-color:var(--line);color:var(--mute)">設定</button>`;
+  $('pills').querySelectorAll('[data-k]').forEach((b) => (b.onclick = () => { filter = b.dataset.k; render(); }));
+  $('expQ').onclick = exportQuotes;
+  $('expP').onclick = exportPlurk;
+  $('gear').onclick = openSettings;
+}
+
+function swatch(x, st) {
+  if (x.source === 'game') return `<b>GAME</b>${esc((x.story || '未填').slice(0, 5))}`;
+  if (x.source === 'web') return '<b>WEB</b>';
+  if (!st.ok) return '<b>OCR</b>未對到';
+  return `<b>${esc((x.ep || '').slice(-3))}</b>${mmss(st.s)}`;
+}
+
+function render() {
+  const shown = shownList();
+  $('countBig').textContent = live().length;
+  $('countMini').textContent = `${live().length} 句待整理`;
+  $('list').innerHTML = shown.map((x) => {
+    const st = sentence(x);
+    return `<li><button class="card" data-id="${x.id}" aria-current="${cur && cur.id === x.id}">
+      <span class="swatch c${x.color}">${swatch(x, st)}</span>
+      <span class="body">
+        <span class="en">${esc(st.a) || '(沒有文字)'}</span>
+        <span class="zh">${esc(x.source === 'web' ? x.title : x.source === 'game' ? sourceLabel(x) : st.b)}</span>
+        ${x.added.length ? `<span class="done">已加入 ${x.added.length} 個字</span>` : ''}
+      </span>
+      ${x.quote ? `<span class="flower-badge">${FLOWER(20)}</span>` : ''}
+    </button></li>`;
+  }).join('');
+  $('list').querySelectorAll('.card').forEach((b) => (b.onclick = () => open(b.dataset.id)));
+  $('empty').classList.toggle('on', !live().length);
+  renderPills();
+  const q = qList().map((x) => sentence(x).a);
+  $('marquee').textContent = q.length ? q.join('　　✿　　') : '看到喜歡的句子,按小花收進來　　✿　　看到喜歡的句子,按小花收進來';
+}
+
+const FLOWER = (s = 22) => `<svg width="${s}" height="${s}" viewBox="0 0 40 40" aria-hidden="true"><g fill="var(--pink)"><circle cx="20" cy="9" r="8"/><circle cx="30.5" cy="16.5" r="8"/><circle cx="26.5" cy="29" r="8"/><circle cx="13.5" cy="29" r="8"/><circle cx="9.5" cy="16.5" r="8"/></g><circle cx="20" cy="20" r="6" fill="var(--sheet)"/></svg>`;
+$('empty').innerHTML = `<svg viewBox="0 0 120 150" aria-hidden="true"><g fill="var(--pink)"><circle cx="60" cy="26" r="24"/><circle cx="91" cy="48" r="24"/><circle cx="80" cy="84" r="24"/><circle cx="40" cy="84" r="24"/><circle cx="29" cy="48" r="24"/></g><path d="M60 112c-14-12-38-10-38 4s24 16 38 4c14 12 38 10 38-4s-24-16-38-4z" fill="var(--green)"/></svg>
+  <b style="color:var(--red);font-size:18px">收集箱清空了</b><span>去看下一集吧</span>`;
+
+// ===== 選字 =====
+function tokenize(text, mode) {
+  if (mode === 'word') return text.match(/[A-Za-z0-9'’]+(?:-[A-Za-z0-9'’]+)*|[^\sA-Za-z0-9]+/g) || [];
+  return [...text];
+}
+const isPunct = (t) => !/[\p{L}\p{N}]/u.test(t);
+
+function gotTokens(toks, mode) {
+  const set = new Set();
+  const key = mode === 'word' ? 'en' : 'jp';
+  const words = toks.map((t) => t.toLowerCase());
+  for (const w of cur.added) {
+    const ph = (w[key] || '').toLowerCase();
+    if (!ph) continue;
+    const pw = mode === 'word' ? ph.match(/[a-z0-9'’]+(?:-[a-z0-9'’]+)*/g) || [] : [...ph];
+    for (let i = 0; i < words.length; i++) {
+      let j = i, k = 0;
+      while (j < words.length && k < pw.length) { if (isPunct(toks[j]) && mode === 'word') { j++; continue; } if (words[j] !== pw[k]) break; j++; k++; }
+      if (pw.length && k === pw.length) for (let z = i; z < j; z++) set.add(z);
+    }
+  }
+  return set;
+}
+
+function renderTokens(slot) {
+  const box = $('tok' + slot);
+  const st = sentence(cur);
+  const text = slot === 'A' ? st.a : st.b;
+  const field = targets(cur)[slot === 'A' ? 0 : 1];
+  if (!text || !field) {
+    box.innerHTML = slot === 'B' && cur.source === 'drama' && st.ok ? '<p class="hint">這句沒有對到中文字幕</p>' : '';
+    return;
+  }
+  const mode = field === 'fEn' ? 'word' : 'char';
+  const toks = tokenize(text, mode);
+  const s = sel[slot];
+  const [a, b] = s.length ? [Math.min(...s), Math.max(...s)] : [-1, -1];
+  const got = field === 'fEn' || field === 'fJp' ? gotTokens(toks, mode) : new Set();
+  box.innerHTML = toks.map((t, i) => {
+    if (/^\s+$/.test(t)) return '';
+    if (isPunct(t)) return `<span class="tok punct">${esc(t)}</span>`;
+    return `<button class="tok ${mode === 'char' ? 'zh' : ''} ${i >= a && i <= b ? 'sel' : ''} ${s.length === 1 && i === a ? 'edge' : ''} ${got.has(i) ? 'got' : ''}" data-i="${i}">${esc(t)}</button>`;
+  }).join('');
+  box.querySelectorAll('button').forEach((btn) => (btn.onclick = () => {
+    const i = +btn.dataset.i;
+    if (s.length === 1 && s[0] !== i) s.push(i); else { s.length = 0; s.push(i); }
+    const lo = Math.min(...s), hi = Math.max(...s);
+    let v = toks.slice(lo, hi + 1);
+    v = mode === 'word' ? v.join(' ').replace(/\s+([,.;:!?])/g, '$1').replace(/\s*-\s*/g, '-') : v.join('');
+    $(field).value = v.replace(/[,.;:!?。,、?!…]+$/, '').trim();
+    renderTokens(slot); renderMemo();
+  }));
+}
+
+// ===== memo =====
+function jpWithReading() { const j = $('fJp').value.trim(), r = $('fRead').value.trim(); return j && r ? `${j}（${r}）` : j; }
+function memoText() {
+  const st = sentence(cur);
+  const flags = ($('flagZh').getAttribute('aria-pressed') === 'true' ? '【中文未確認】' : '') + ($('flagJp').getAttribute('aria-pressed') === 'true' ? '【日文待查證】' : '');
+  const ex = st.b ? `例句:${st.a}\n　　　${st.b}` : `例句:${st.a}`;
+  return [flags, $('fNote').value.trim(), ex, `出處:${sourceLabel(cur)}`].filter(Boolean).join('\n');
+}
+function renderMemo() { $('memo').textContent = memoText(); }
+
+// ===== 資料夾 =====
+async function loadImg(id) {
+  if (imgs[id]) return imgs[id];
+  const blob = await api('/img/' + id, { blob: true });
+  return (imgs[id] = URL.createObjectURL(blob));
+}
+
+function resetFields() {
+  sel.A = []; sel.B = [];
+  ['fEn', 'fJp', 'fRead', 'fZh', 'fNote'].forEach((k) => ($(k).value = ''));
+  const on = cur.source !== 'game';
+  $('flagZh').setAttribute('aria-pressed', on); $('flagJp').setAttribute('aria-pressed', on);
+  if (cur.source === 'web' && cur.text) $(targets(cur)[0]).value = cur.text;
+}
+
+function fillFolder() {
+  const x = cur, st = sentence(x);
+  $('tab').textContent = x.source === 'drama' ? `${sourceLabel(x)}${st.ok ? '　' + mmss(st.s) : ''}` : x.source === 'game' ? (x.story || '遊戲') : '網頁';
+  $('range').hidden = !(x.source === 'drama' && st.ok);
+  $('rowEn').hidden = x.source === 'game';
+  $('rowThought').hidden = x.source !== 'game';
+  $('gameBox').hidden = x.source !== 'game';
+  $('epBox').hidden = !(x.source === 'drama' && !st.ok);
+  // 遊戲
+  if (x.source === 'game') {
+    $('fGame').innerHTML = settings.games.map((g) => `<option>${esc(g.name)}</option>`).join('') || '<option value="">先到設定加遊戲</option>';
+    $('fGame').value = x.game || store.get('lastGame') || settings.games[0]?.name || '';
+    $('fStory').value = x.story || '';
+    $('fStoryDate').value = x.storyDate || stories[x.story]?.date || '';
+    $('storyList').innerHTML = Object.keys(stories).reverse().map((t) => `<option value="${esc(t)}">`).join('');
+    $('fThought').value = x.thought || '';
+    const ls = x.ocr || [];
+    $('lines').hidden = ls.length < 2;
+    const cur_i = x.line ?? ls.indexOf(st.a);
+    $('lines').innerHTML = '<p class="hint" style="margin:0">選例句是哪一行</p>' + ls.map((l, i) => `<button class="line" data-i="${i}" aria-pressed="${i === cur_i}">${esc(l)}</button>`).join('');
+    $('lines').querySelectorAll('.line').forEach((b) => (b.onclick = () => { x.line = +b.dataset.i; save(x, { line: x.line }); sel.A = []; fillFolder(); }));
+  } else $('lines').hidden = true;
+  // 沒對到字幕的截圖:手動選集數
+  if (!$('epBox').hidden) {
+    const ids = Object.keys(srtIndex);
+    $('fEp').innerHTML = '<option value="">選集數再比對一次</option>' + ids.map((id) => `<option value="${id}">${esc((srtIndex[id].show || '') + ' ' + (srtIndex[id].ep || id))}</option>`).join('');
+  }
+  // 截圖
+  $('shot').hidden = !x.image;
+  if (x.image) { $('shot').removeAttribute('src'); loadImg(x.id).then((u) => { if (cur === x) $('shot').src = u; }).catch(() => {}); }
+  $('fSrc').innerHTML = settings.sources.map((s) => `<option>${esc(s)}</option>`).join('');
+  $('fSrc').value = x.source === 'web' ? store.get('lastWebSrc') || settings.sources[0] : settings.sources.includes('作品') ? '作品' : settings.sources[0];
+  $('quoteBtn').innerHTML = FLOWER(28);
+  $('quoteBtn').setAttribute('aria-pressed', !!x.quote);
+  $('added').innerHTML = x.added.map((w) => `<span>${esc(w.en || w.jp || w.zh)}</span>`).join('');
+  renderTokens('A'); renderTokens('B'); renderMemo();
+}
+
+async function open(id) {
+  cur = items.find((x) => x.id === id);
+  if (!cur) return;
+  await prepare(cur);
+  resetFields(); fillFolder();
+  $('folder').classList.add('on'); $('scrim').classList.add('on');
+  $('scroll').scrollTop = 0;
+  render();
+}
+function close() {
+  $('folder').classList.remove('on'); $('scrim').classList.remove('on');
+  if (!matchMedia('(min-width:1000px)').matches) cur = null;
+  render();
+}
+function step(d) {
+  const shown = shownList(), i = shown.findIndex((x) => x.id === cur?.id);
+  if (shown[i + d]) open(shown[i + d].id);
+}
+function save(x, patch) { Object.assign(x, patch); return send('/captures', 'PATCH', [{ id: x.id, ...patch }]).catch((e) => toast('儲存失敗:' + e.message)); }
+
+// ===== 句子範圍 =====
+function setRange(ui, uj) {
+  const s = subs[cur.videoId];
+  if (!s || ui < 0 || uj >= s.units.length || ui > uj) return;
+  cur.ui = ui; cur.uj = uj; sel.A = []; sel.B = [];
+  fillFolder(); render();
+}
+$('rPrev').onclick = () => setRange(cur.ui - 1, cur.ui - 1);
+$('rNext').onclick = () => setRange(cur.uj + 1, cur.uj + 1);
+$('rAddPrev').onclick = () => setRange(cur.ui - 1, cur.uj);
+$('rAddNext').onclick = () => setRange(cur.ui, cur.uj + 1);
+$('rReset').onclick = () => setRange(cur.base, cur.base);
+
+// ===== 動作 =====
+$('send').onclick = async () => {
+  const x = cur;
+  const w = { en: $('fEn').value.trim(), jp: $('fJp').value.trim(), reading: $('fRead').value.trim(), zh: $('fZh').value.trim(), note: $('fNote').value.trim() };
+  if (!w.en && !w.jp && !w.zh) { toast('先點選或填入單字'); return; }
+  const btn = $('send'); btn.disabled = true;
+  try {
+    await send('/notion', 'POST', { zh: w.zh, en: w.en, jp: jpWithReading(), memo: memoText(), source: $('fSrc').value });
+    if (x.source === 'web') store.set('lastWebSrc', $('fSrc').value);
+    x.added.push(w);
+    await save(x, { added: x.added, ui: x.ui ?? null, uj: x.uj ?? null });
+    toast('已送出 ' + (w.en || w.jp || w.zh));
+    if (cur === x) { resetFields(); if (x.source === 'web') ['fEn', 'fJp'].forEach((k) => ($(k).value = '')); fillFolder(); }
+    render();
+  } catch (e) { toast('送出失敗:' + e.message); }
+  btn.disabled = false;
+};
+
+function pending(x) { return (x.quote && !x.quoteExported) || (x.source === 'game' && x.added.length && !x.plurkExported); }
+async function cleanup() {
+  const ids = items.filter((x) => x.done && !pending(x)).map((x) => x.id);
+  if (!ids.length) return;
+  await send('/captures/delete', 'POST', { ids }).catch(() => {});
+  items = items.filter((x) => !ids.includes(x.id));
+}
+
+$('finish').onclick = async () => {
+  const shown = shownList(), i = shown.findIndex((x) => x.id === cur.id);
+  const x = cur;
+  await save(x, { done: true, ui: x.ui ?? null, uj: x.uj ?? null });
+  toast(pending(x) ? '整理完了,匯出後才會刪掉' : '這句整理完了');
+  await cleanup();
+  const n = shown[i + 1] || shown[i - 1];
+  if (n && n.id !== x.id) open(n.id); else { cur = null; close(); }
+};
+
+$('del').onclick = async () => {
+  if (!confirm('確定刪除這張?')) return;
+  const shown = shownList(), i = shown.findIndex((x) => x.id === cur.id), x = cur;
+  await send('/captures/delete', 'POST', { ids: [x.id] }).catch((e) => toast(e.message));
+  items = items.filter((y) => y.id !== x.id);
+  toast('刪掉了');
+  const n = shown[i + 1] || shown[i - 1];
+  if (n) open(n.id); else { cur = null; close(); }
+};
+
+$('quoteBtn').onclick = () => {
+  const v = !cur.quote;
+  save(cur, { quote: v, quoteExported: false, ui: cur.ui ?? null, uj: cur.uj ?? null });
+  $('quoteBtn').setAttribute('aria-pressed', v);
+  toast(v ? '收進 Quote 了' : '取消 Quote'); render();
+};
+
+$('flagZh').onclick = $('flagJp').onclick = (e) => { const b = e.currentTarget; b.setAttribute('aria-pressed', b.getAttribute('aria-pressed') !== 'true'); renderMemo(); };
+['fEn', 'fZh', 'fJp', 'fRead', 'fNote'].forEach((k) => ($(k).oninput = renderMemo));
+$('paste').onclick = async () => { try { $('fJp').value = (await navigator.clipboard.readText()).trim(); renderMemo(); } catch { $('fJp').focus(); toast('請長按欄位貼上'); } };
+
+// 遊戲欄位:改了就存
+$('fGame').onchange = () => { store.set('lastGame', $('fGame').value); save(cur, { game: $('fGame').value }); renderMemo(); };
+$('fStory').onchange = () => {
+  const t = $('fStory').value.trim();
+  const d = stories[t]?.date || '';
+  if (d && !$('fStoryDate').value) $('fStoryDate').value = d;
+  save(cur, { story: t, storyDate: $('fStoryDate').value.trim(), game: $('fGame').value });
+  rememberStory(); fillTab(); renderMemo(); render();
+};
+$('fStoryDate').onchange = () => { save(cur, { storyDate: $('fStoryDate').value.trim() }); rememberStory(); };
+$('fThought').onchange = () => save(cur, { thought: $('fThought').value.trim() });
+function fillTab() { $('tab').textContent = cur.story || '遊戲'; }
+function rememberStory() {
+  const t = $('fStory').value.trim();
+  if (!t) return;
+  stories[t] = { game: $('fGame').value, date: $('fStoryDate').value.trim() };
+  send('/meta/stories', 'PUT', stories).catch(() => {});
+}
+$('fEp').onchange = async () => {
+  const id = $('fEp').value; if (!id) return;
+  const ok = await resolveOcr(cur, id);
+  if (!ok) { toast('這集也找不到'); return; }
+  cur.base = null; cur.ui = null; await prepare(cur); resetFields(); fillFolder(); render();
+};
+
+// ===== 匯出 Quote =====
+function dialog(title, html) { $('dlgTitle').textContent = title; $('dlgBody').innerHTML = html; $('dlg').showModal(); }
+$('dlgClose').onclick = () => $('dlg').close();
+
+async function exportQuotes() {
+  const q = qList();
+  if (!q.length) { toast('沒有新的 Quote'); return; }
+  for (const x of q) await prepare(x);
+  const text = q.map((x) => `- Quote｜${sourceLabel(x)}｜${sentence(x).a}`).join('\n');
+  dialog('匯出 Quote', `<pre id="qText"></pre><div class="row"><button class="small" id="qCopy" style="background:var(--red);color:var(--on-red)">複製</button></div>`);
+  $('qText').textContent = text;
+  $('qCopy').onclick = async () => {
+    try { await navigator.clipboard.writeText(text); } catch { toast('複製失敗,請手動選取'); return; }
+    q.forEach((x) => (x.quoteExported = true));
+    await send('/captures', 'PATCH', q.map((x) => ({ id: x.id, quoteExported: true }))).catch(() => {});
+    await cleanup();
+    $('dlg').close(); toast(`複製了 ${q.length} 句`); render();
+  };
+}
+
+// ===== 匯出噗浪 =====
+function plurkText(group) {
+  const x0 = group[0];
+  const game = settings.games.find((g) => g.name === x0.game);
+  const rd = readDate(x0);
+  const date = x0.storyDate || stories[x0.story]?.date || '';
+  const head = [
+    game?.tags || `${x0.game || ''}故事讀書日記`,
+    `（${rd}）${rd !== today() ? '補' : ''}`,
+    `【${x0.story || ''}】${date ? `（${date}～）` : ''}`,
+  ].join('\n');
+  const words = group.flatMap((x) => x.added).map((w) => `${w.jp}${w.reading ? `（${w.reading}）` : ''}／${w.zh}${w.note ? '\n' + w.note : ''}`).join('\n\n');
+  const thoughts = group.map((x) => x.thought).filter(Boolean).join('\n\n');
+  return [head, words, thoughts].filter(Boolean).join('\n\n');
+}
+
+async function saveImages(group) {
+  const files = [];
+  for (const x of group.filter((y) => y.image)) {
+    const blob = await api('/img/' + x.id, { blob: true });
+    files.push(new File([blob], `${x.story || 'story'}-${x.id}.jpg`, { type: 'image/jpeg' }));
+  }
+  if (!files.length) { toast('這篇沒有截圖'); return; }
+  if (navigator.canShare && navigator.canShare({ files })) { try { await navigator.share({ files }); } catch {} return; }
+  files.forEach((f) => { const a = document.createElement('a'); a.href = URL.createObjectURL(f); a.download = f.name; a.click(); });
+}
+
+async function exportPlurk() {
+  const list = plurkList();
+  if (!list.length) { toast('沒有要發的噗'); return; }
+  const groups = {};
+  list.forEach((x) => (groups[(x.game || '') + '|' + (x.story || '') + '|' + readDate(x)] ||= []).push(x));
+  const keys = Object.keys(groups);
+  dialog('匯出噗浪', keys.map((k, i) => `<div class="post"><pre id="pt${i}"></pre><div class="thumbs" id="th${i}"></div>
+    <div class="row"><button class="small" id="pi${i}">存圖</button><button class="small" id="pc${i}" style="background:var(--red);color:var(--on-red)">複製</button></div></div>`).join(''));
+  keys.forEach((k, i) => {
+    const g = groups[k], text = plurkText(g);
+    $('pt' + i).textContent = text;
+    g.filter((x) => x.image).forEach((x) => loadImg(x.id).then((u) => { const im = new Image(); im.src = u; im.alt = ''; $('th' + i)?.appendChild(im); }).catch(() => {}));
+    $('pi' + i).onclick = () => saveImages(g);
+    $('pc' + i).onclick = async () => {
+      try { await navigator.clipboard.writeText(text); } catch { toast('複製失敗,請手動選取'); return; }
+      g.forEach((x) => (x.plurkExported = true));
+      await send('/captures', 'PATCH', g.map((x) => ({ id: x.id, plurkExported: true }))).catch(() => {});
+      await cleanup();
+      $('pc' + i).textContent = '已複製'; $('pc' + i).disabled = true;
+      toast('複製了,記得存圖'); render();
+    };
+  });
+}
+
+// ===== 設定 =====
+function openSettings() {
+  $('gUrl').value = BASE; $('gPass').value = PASS;
+  $('gGames').value = settings.games.map((g) => `${g.name} = ${g.tags}`).join('\n');
+  $('gSources').value = settings.sources.join(',');
+  $('setDlg').showModal();
+}
+$('setClose').onclick = () => $('setDlg').close();
+$('setSave').onclick = async () => {
+  BASE = $('gUrl').value.trim().replace(/\/+$/, ''); PASS = $('gPass').value;
+  store.set('url', BASE); store.set('pass', PASS);
+  settings.games = $('gGames').value.split('\n').map((l) => { const i = l.indexOf('='); return i < 0 ? null : { name: l.slice(0, i).trim(), tags: l.slice(i + 1).trim() }; }).filter((g) => g && g.name);
+  settings.sources = $('gSources').value.split(/[,，]/).map((s) => s.trim()).filter(Boolean);
+  try { await send('/meta/settings', 'PUT', settings); toast('已儲存'); } catch (e) { toast('儲存失敗:' + e.message); }
+  $('setDlg').close(); if (cur) fillFolder();
+};
+
+// ===== 其他操作 =====
+$('scrim').onclick = close;
+$('prev').onclick = () => step(-1);
+$('next').onclick = () => step(1);
+let sx = 0, sy = 0;
+$('folder').addEventListener('touchstart', (e) => { sx = e.touches[0].clientX; sy = e.touches[0].clientY; }, { passive: true });
+$('folder').addEventListener('touchend', (e) => {
+  if (e.target.closest('input,select,textarea,.shot')) return;
+  const dx = e.changedTouches[0].clientX - sx, dy = e.changedTouches[0].clientY - sy;
+  if (Math.abs(dx) > 70 && Math.abs(dx) > Math.abs(dy) * 1.5) step(dx < 0 ? 1 : -1);
+  else if (dy > 90 && $('scroll').scrollTop <= 0 && Math.abs(dy) > Math.abs(dx) * 1.5) close();
+}, { passive: true });
+$('shot').onclick = () => window.open($('shot').src, '_blank');
+new IntersectionObserver(([en]) => $('bar').classList.toggle('collapsed', !en.isIntersecting), { rootMargin: '-60px 0px 0px 0px' }).observe($('cover'));
+
+// ===== 啟動 =====
+async function boot() {
+  try {
+    const [caps, idx, set, sto] = await Promise.all([api('/captures'), api('/srt'), api('/meta/settings'), api('/meta/stories')]);
+    srtIndex = idx; stories = sto || {};
+    if (set && (set.games || set.sources)) settings = { ...settings, ...set };
+    items = caps.map((x, i) => ({ added: [], ...x, color: i % 5 }));
+    $('setup').hidden = true; $('app').hidden = false;
+    await cleanup();
+    // 先把會出現在列表上的美劇卡準備好(對字幕)
+    await Promise.all(live().filter((x) => x.source === 'drama').map((x) => prepare(x).catch(() => {})));
+    render();
+    if (matchMedia('(min-width:1000px)').matches && live()[0]) open(live()[0].id);
+  } catch (e) {
+    $('app').hidden = true; $('setup').hidden = false;
+    $('sUrl').value = BASE; $('sPass').value = PASS;
+    $('sMsg').textContent = BASE ? '連不上:' + e.message : '';
+  }
+}
+$('sSave').onclick = () => {
+  BASE = $('sUrl').value.trim().replace(/\/+$/, ''); PASS = $('sPass').value;
+  store.set('url', BASE); store.set('pass', PASS);
+  boot();
+};
+if (BASE && PASS) boot(); else { $('setup').hidden = false; }
+
+</script>
+</body>
+</html>
