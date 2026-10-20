@@ -181,6 +181,7 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end}
 .thumbs{display:flex;gap:8px;flex-wrap:wrap;margin:0 0 10px}
 .thumbs img{width:88px;height:56px;object-fit:cover;border-radius:10px}
 [hidden]{display:none!important}
+.stat{font-size:12px;color:var(--red);font-weight:700}
 </style>
 </head>
 <body>
@@ -257,12 +258,11 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end}
         <div class="added" id="added"></div>
 
         <div class="field" id="rowThought" style="margin-top:14px"><label for="fThought">感想</label><textarea id="fThought" placeholder="發噗時放在最後"></textarea><span></span></div>
-        <button class="small ghost" id="del" style="margin-top:18px">刪除這張</button>
       </div>
       <div class="actions">
         <button class="flowerbtn" id="quoteBtn" aria-pressed="false" aria-label="標成 Quote"></button>
-        <button class="btn main" id="send">送出</button>
-        <button class="btn" id="finish">整理完</button>
+        <button class="btn main" id="send">存進 Notion</button>
+        <button class="btn" id="finish">刪除卡片</button>
       </div>
     </div>
   </section>
@@ -391,10 +391,11 @@ const sel = { A: [], B: [] };
 const subs = {};      // videoId -> { units, zh }
 const imgs = {};      // id -> objectURL
 const SRC_NAME = { drama: '美劇', game: '遊戲', web: '網頁' };
+function pending(x) { return (x.quote && !x.quoteExported) || (x.source === 'game' && x.added.length && !x.plurkExported); }
 const UI_WORDS = /^(剪輯|播放速度.*|集數|音訊和字幕|下一集|全螢幕|略過片頭|\d{1,2}:\d{2}(:\d{2})?|[<>‹›×✕]+)$/;
 
 const live = () => items.filter((x) => !x.done);
-const shownList = () => live().filter((x) => filter === 'all' || x.source === filter);
+const shownList = () => filter === 'pending' ? items.filter((x) => pending(x)) : live().filter((x) => filter === 'all' || x.source === filter);
 const today = () => { const d = new Date(); return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`; };
 const readDate = (x) => { const d = new Date(x.createdAt); return `${d.getFullYear()}${String(d.getMonth() + 1).padStart(2, '0')}${String(d.getDate()).padStart(2, '0')}`; };
 const mmss = (t) => `${Math.floor(t / 60)}:${String(Math.floor(t % 60)).padStart(2, '0')}`;
@@ -509,7 +510,9 @@ const plurkList = () => items.filter((x) => x.source === 'game' && x.added.lengt
 function renderPills() {
   const srcs = [...new Set(live().map((x) => x.source))];
   const q = qList().length, pg = new Set(plurkList().map((x) => x.story + readDate(x))).size;
-  $('pills').innerHTML = [['all', '全部'], ...srcs.map((s) => [s, SRC_NAME[s] || s])]
+  const pn = items.filter((x) => pending(x)).length;
+  if (filter === 'pending' && !pn) filter = 'all';
+  $('pills').innerHTML = [['all', '全部'], ...srcs.map((s) => [s, SRC_NAME[s] || s]), ...(pn ? [['pending', `待匯出 ${pn}`]] : [])]
     .map(([k, l]) => `<button class="pill" data-k="${k}" aria-pressed="${filter === k}">${l}</button>`).join('')
     + `<button class="pill quote" id="expQ">匯出 Quote${q ? ' ' + q : ''}</button>`
     + `<button class="pill quote" id="expP" style="margin-left:0">匯出噗浪${pg ? ' ' + pg : ''}</button>`
@@ -527,6 +530,14 @@ function swatch(x, st) {
   return `<b>${esc((x.ep || '').slice(-3))}</b>${mmss(st.s)}`;
 }
 
+function status(x) {
+  const t = [];
+  if (x.quote) t.push(x.quoteExported ? 'Quote 已匯出' : 'Quote 待匯出');
+  if (x.source === 'game' && x.added.length) t.push(x.plurkExported ? '噗浪已匯出' : '噗浪待匯出');
+  if (x.done) t.push('已刪除卡片');
+  return t.length ? `<span class="stat">${t.join('・')}</span>` : '';
+}
+
 function render() {
   const shown = shownList();
   $('countBig').textContent = live().length;
@@ -539,6 +550,7 @@ function render() {
         <span class="en">${esc(st.a) || '(沒有文字)'}</span>
         <span class="zh">${esc(x.source === 'web' ? x.title : x.source === 'game' ? sourceLabel(x) : st.b)}</span>
         ${x.added.length ? `<span class="done">已加入 ${x.added.length} 個字</span>` : ''}
+        ${status(x)}
       </span>
       ${x.quote ? `<span class="flower-badge">${FLOWER(20)}</span>` : ''}
     </button></li>`;
@@ -667,6 +679,7 @@ function fillFolder() {
   $('fSrc').value = x.source === 'web' ? store.get('lastWebSrc') || settings.sources[0] : settings.sources.includes('作品') ? '作品' : settings.sources[0];
   $('quoteBtn').innerHTML = FLOWER(28);
   $('quoteBtn').setAttribute('aria-pressed', !!x.quote);
+  $('finish').textContent = x.done ? '放回列表' : '刪除卡片';
   $('added').innerHTML = x.added.map((w) => `<span>${esc(w.en || w.jp || w.zh)}</span>`).join('');
   renderTokens('A'); renderTokens('B'); renderMemo();
 }
@@ -722,7 +735,6 @@ $('send').onclick = async () => {
   btn.disabled = false;
 };
 
-function pending(x) { return (x.quote && !x.quoteExported) || (x.source === 'game' && x.added.length && !x.plurkExported); }
 async function cleanup() {
   const ids = items.filter((x) => x.done && !pending(x)).map((x) => x.id);
   if (!ids.length) return;
@@ -733,21 +745,16 @@ async function cleanup() {
 $('finish').onclick = async () => {
   const shown = shownList(), i = shown.findIndex((x) => x.id === cur.id);
   const x = cur;
+  if (x.done) { await save(x, { done: false }); toast('放回列表了'); fillFolder(); render(); return; }
+  const unsaved = ($('fEn').value.trim() || $('fJp').value.trim() || $('fZh').value.trim()) &&
+    !(x.source === 'web' && $(targets(x)[0]).value.trim() === (x.text || '') && !$('fZh').value.trim());
+  const msg = unsaved ? '欄位裡還有字沒存進 Notion,確定刪除這張卡片?' : '確定刪除這張卡片?';
+  if (!confirm(msg)) return;
   await save(x, { done: true, ui: x.ui ?? null, uj: x.uj ?? null });
-  toast(pending(x) ? '整理完了,匯出後才會刪掉' : '這句整理完了');
+  toast(pending(x) ? '卡片收起來了,匯出後才會真正刪除' : '刪掉了');
   await cleanup();
   const n = shown[i + 1] || shown[i - 1];
   if (n && n.id !== x.id) open(n.id); else { cur = null; close(); }
-};
-
-$('del').onclick = async () => {
-  if (!confirm('確定刪除這張?')) return;
-  const shown = shownList(), i = shown.findIndex((x) => x.id === cur.id), x = cur;
-  await send('/captures/delete', 'POST', { ids: [x.id] }).catch((e) => toast(e.message));
-  items = items.filter((y) => y.id !== x.id);
-  toast('刪掉了');
-  const n = shown[i + 1] || shown[i - 1];
-  if (n) open(n.id); else { cur = null; close(); }
 };
 
 $('quoteBtn').onclick = () => {
@@ -889,13 +896,22 @@ $('folder').addEventListener('touchend', (e) => {
 $('shot').onclick = () => window.open($('shot').src, '_blank');
 new IntersectionObserver(([en]) => $('bar').classList.toggle('collapsed', !en.isIntersecting), { rootMargin: '-60px 0px 0px 0px' }).observe($('cover'));
 
+// 舊版收集的資料沒有 source、videoId,這裡補上
+function normalize(x, i) {
+  const y = { added: [], ocr: [], ...x, color: i % 5 };
+  if (!y.source) y.source = y.type === 'netflix' || y.type === 'ocr' ? 'drama' : 'web';
+  if (!y.videoId) y.videoId = (String(y.url || '').match(/watch\/(\d+)/) || [])[1] || '';
+  y.added = (y.added || []).map((w) => (typeof w === 'string' ? { en: w } : w));
+  return y;
+}
+
 // ===== 啟動 =====
 async function boot() {
   try {
     const [caps, idx, set, sto] = await Promise.all([api('/captures'), api('/srt'), api('/meta/settings'), api('/meta/stories')]);
     srtIndex = idx; stories = sto || {};
     if (set && (set.games || set.sources)) settings = { ...settings, ...set };
-    items = caps.map((x, i) => ({ added: [], ...x, color: i % 5 }));
+    items = caps.map((x, i) => normalize(x, i));
     $('setup').hidden = true; $('app').hidden = false;
     await cleanup();
     // 先把會出現在列表上的美劇卡準備好(對字幕)
