@@ -287,6 +287,10 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end}
   <label for="gSources">Source 選項</label>
   <input id="gSources" class="dlg-input" placeholder="作品,接案工作&準備,新聞,生活">
   <p class="hint">和 Notion 的 Source 選項一致,用逗號分開。</p>
+  <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:10px">
+    <span class="hint" id="ver" style="margin:0"></span>
+    <button class="small ghost" id="reload">重新載入</button>
+  </div>
   <div class="row"><button class="small" id="setClose">取消</button><button class="small" id="setSave" style="background:var(--red);color:var(--on-red)">儲存</button></div>
 </dialog>
 
@@ -363,6 +367,8 @@ function zhFor(parts, s, e){
     })
     .map(c => c.text).join(' ').replace(/\s+/g,'，').replace(/，([，。？！、…])/g,'$1');
 }
+
+const VERSION = '2026.10.20-3';
 
 // ===== 連線 =====
 const $ = (id) => document.getElementById(id);
@@ -491,7 +497,11 @@ function sentence(x) {
   return { a: x.context || x.text, b: '', s: 0, ok: true };
 }
 function sourceLabel(x) {
-  if (x.source === 'drama') return `${x.show || '影片'}${x.ep ? ' ' + x.ep : ''}`;
+  if (x.source === 'drama') {
+    const row = srtIndex[x.videoId] || {};
+    const show = row.show || x.show || '影片', ep = row.ep || x.ep || '';
+    return `${show}${ep ? ' ' + ep : ''}`;
+  }
   if (x.source === 'game') return `${x.game || '遊戲'}${x.story ? '【' + x.story + '】' : ''}`;
   return x.title || '網頁';
 }
@@ -527,7 +537,7 @@ function swatch(x, st) {
   if (x.source === 'game') return `<b>GAME</b>${esc((x.story || '未填').slice(0, 5))}`;
   if (x.source === 'web') return '<b>WEB</b>';
   if (!st.ok) return '<b>OCR</b>未對到';
-  return `<b>${esc((x.ep || '').slice(-3))}</b>${mmss(st.s)}`;
+  return `<b>${esc(((srtIndex[x.videoId] || {}).ep || x.ep || '').slice(-3))}</b>${mmss(st.s)}`;
 }
 
 function status(x) {
@@ -625,8 +635,8 @@ function jpWithReading() { const j = $('fJp').value.trim(), r = $('fRead').value
 function memoText() {
   const st = sentence(cur);
   const flags = ($('flagZh').getAttribute('aria-pressed') === 'true' ? '【中文未確認】' : '') + ($('flagJp').getAttribute('aria-pressed') === 'true' ? '【日文待查證】' : '');
-  const ex = st.b ? `例句:${st.a}\n　　　${st.b}` : `例句:${st.a}`;
-  return [flags, $('fNote').value.trim(), ex, `出處:${sourceLabel(cur)}`].filter(Boolean).join('\n');
+  const ex = st.b ? `例句：${st.a}\n${st.b}` : `例句：${st.a}`;
+  return [flags, $('fNote').value.trim(), ex, `出處：${sourceLabel(cur)}`].filter(Boolean).join('\n');
 }
 function renderMemo() { $('memo').textContent = memoText(); }
 
@@ -869,9 +879,11 @@ function openSettings() {
   $('gUrl').value = BASE; $('gPass').value = PASS;
   $('gGames').value = settings.games.map((g) => `${g.name} = ${g.tags}`).join('\n');
   $('gSources').value = settings.sources.join(',');
+  $('ver').textContent = '版本 ' + VERSION;
   $('setDlg').showModal();
 }
 $('setClose').onclick = () => $('setDlg').close();
+$('reload').onclick = () => location.replace(location.pathname + '?v=' + Date.now());
 $('setSave').onclick = async () => {
   BASE = $('gUrl').value.trim().replace(/\/+$/, ''); PASS = $('gPass').value;
   store.set('url', BASE); store.set('pass', PASS);
