@@ -239,7 +239,6 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end}
           <button class="small" id="rNext">下句</button>
           <button class="small ghost" id="rReset">還原</button>
         </div>
-        <p class="hint">點兩個字選範圍,點同一個字只選一個字</p>
         <div class="tokens" id="tokA"></div>
         <div class="tokens" id="tokB"></div>
 
@@ -285,8 +284,8 @@ dialog .row{display:flex;gap:10px;justify-content:flex-end}
   <textarea id="gGames" class="dlg-input" rows="3" placeholder="あんスタ = # あんスタ # 合奏 # ズ！故事讀書日記"></textarea>
   <p class="hint">一行一款遊戲。等號右邊是噗文的第一行。</p>
   <label for="gSources">Source 選項</label>
-  <input id="gSources" class="dlg-input" placeholder="作品,接案工作&準備,新聞,生活">
-  <p class="hint">和 Notion 的 Source 選項一致,用逗號分開。</p>
+  <input id="gSources" class="dlg-input" placeholder="作品，接案工作&準備，新聞，生活">
+  <p class="hint">和 Notion 的 Source 選項一致，用逗號分開。</p>
   <div class="row" style="justify-content:space-between;align-items:center;margin-bottom:10px">
     <span class="hint" id="ver" style="margin:0"></span>
     <button class="small ghost" id="reload">重新載入</button>
@@ -368,7 +367,7 @@ function zhFor(parts, s, e){
     .map(c => c.text).join(' ').replace(/\s+/g,'，').replace(/，([，。？！、…])/g,'$1');
 }
 
-const VERSION = '2026.10.20-5';
+const VERSION = '2026.10.26-3';
 
 // ===== 連線 =====
 const $ = (id) => document.getElementById(id);
@@ -557,7 +556,7 @@ function render() {
     return `<li><button class="card" data-id="${x.id}" aria-current="${cur && cur.id === x.id}">
       <span class="swatch c${x.color}">${swatch(x, st)}</span>
       <span class="body">
-        <span class="en">${esc(st.a) || '(沒有文字)'}</span>
+        <span class="en">${esc(st.a) || '（沒有文字）'}</span>
         <span class="zh">${esc(x.source === 'web' ? x.title : x.source === 'game' ? sourceLabel(x) : st.b)}</span>
         ${x.added.length ? `<span class="done">已加入 ${x.added.length} 個字</span>` : ''}
         ${status(x)}
@@ -569,7 +568,7 @@ function render() {
   $('empty').classList.toggle('on', !live().length);
   renderPills();
   const q = qList().map((x) => sentence(x).a);
-  $('marquee').textContent = q.length ? q.join('　　✿　　') : '看到喜歡的句子,按小花收進來　　✿　　看到喜歡的句子,按小花收進來';
+  $('marquee').textContent = q.length ? q.join('　　✿　　') : '看到喜歡的句子，按小花收進來　　✿　　看到喜歡的句子，按小花收進來';
 }
 
 const FLOWER = (s = 22) => `<svg width="${s}" height="${s}" viewBox="0 0 40 40" aria-hidden="true"><g fill="var(--pink)"><circle cx="20" cy="9" r="8"/><circle cx="30.5" cy="16.5" r="8"/><circle cx="26.5" cy="29" r="8"/><circle cx="13.5" cy="29" r="8"/><circle cx="9.5" cy="16.5" r="8"/></g><circle cx="20" cy="20" r="6" fill="var(--sheet)"/></svg>`;
@@ -611,23 +610,38 @@ function renderTokens(slot) {
   }
   const mode = field === 'fEn' ? 'word' : 'char';
   const toks = tokenize(text, mode);
-  const s = sel[slot];
-  const [a, b] = s.length ? [Math.min(...s), Math.max(...s)] : [-1, -1];
+  const s = sel[slot];   // 點了哪些字(可以點很多個,不必相連)
   const got = field === 'fEn' || field === 'fJp' ? gotTokens(toks, mode) : new Set();
   box.innerHTML = toks.map((t, i) => {
     if (/^\s+$/.test(t)) return '';
     if (isPunct(t)) return `<span class="tok punct">${esc(t)}</span>`;
-    return `<button class="tok ${mode === 'char' ? 'zh' : ''} ${i >= a && i <= b ? 'sel' : ''} ${s.length === 1 && i === a ? 'edge' : ''} ${got.has(i) ? 'got' : ''}" data-i="${i}">${esc(t)}</button>`;
+    return `<button class="tok ${mode === 'char' ? 'zh' : ''} ${s.includes(i) ? 'sel' : ''} ${got.has(i) ? 'got' : ''}" data-i="${i}">${esc(t)}</button>`;
   }).join('');
   box.querySelectorAll('button').forEach((btn) => (btn.onclick = () => {
     const i = +btn.dataset.i;
-    if (s.length === 1 && s[0] !== i) s.push(i); else { s.length = 0; s.push(i); }
-    const lo = Math.min(...s), hi = Math.max(...s);
-    let v = toks.slice(lo, hi + 1);
-    v = mode === 'word' ? v.join(' ').replace(/\s+([,.;:!?])/g, '$1').replace(/\s*-\s*/g, '-') : v.join('');
-    $(field).value = v.replace(/[,.;:!?。,、?!…]+$/, '').trim();
+    const k = s.indexOf(i);
+    if (k >= 0) s.splice(k, 1); else s.push(i);
+    $(field).value = joinPicked(toks, s, mode);
     renderTokens(slot); renderMemo();
   }));
+}
+
+// 把點選的字組起來:相連的照原樣接起來(中間的標點也保留),中間有跳過的字就用「…」
+function joinPicked(toks, picked, mode) {
+  const idx = [...picked].sort((x, y) => x - y);
+  if (!idx.length) return '';
+  let out = toks[idx[0]];
+  for (let n = 1; n < idx.length; n++) {
+    const between = toks.slice(idx[n - 1] + 1, idx[n]).filter((t) => !/^\s+$/.test(t));
+    const onlyPunct = between.every((t) => isPunct(t));
+    if (onlyPunct) {
+      const p = between.join('');
+      out += mode === 'word' ? (p ? p + ' ' : ' ') + toks[idx[n]] : p + toks[idx[n]];
+    } else {
+      out += mode === 'word' ? ' … ' + toks[idx[n]] : '…' + toks[idx[n]];
+    }
+  }
+  return out.replace(/\s*-\s*/g, (m) => (m.trim() === '-' && mode === 'word' ? '-' : m)).trim();
 }
 
 // ===== memo =====
@@ -712,7 +726,7 @@ function step(d) {
   const shown = shownList(), i = shown.findIndex((x) => x.id === cur?.id);
   if (shown[i + d]) open(shown[i + d].id);
 }
-function save(x, patch) { Object.assign(x, patch); return send('/captures', 'PATCH', [{ id: x.id, ...patch }]).catch((e) => toast('儲存失敗:' + e.message)); }
+function save(x, patch) { Object.assign(x, patch); return send('/captures', 'PATCH', [{ id: x.id, ...patch }]).catch((e) => toast('儲存失敗：' + e.message)); }
 
 // ===== 句子範圍 =====
 function setRange(ui, uj) {
@@ -741,7 +755,7 @@ $('send').onclick = async () => {
     toast('已送出 ' + (w.en || w.jp || w.zh));
     if (cur === x) { resetFields(); if (x.source === 'web') ['fEn', 'fJp'].forEach((k) => ($(k).value = '')); fillFolder(); }
     render();
-  } catch (e) { toast('送出失敗:' + e.message); }
+  } catch (e) { toast('送出失敗：' + e.message); }
   btn.disabled = false;
 };
 
@@ -758,10 +772,10 @@ $('finish').onclick = async () => {
   if (x.done) { await save(x, { done: false }); toast('放回列表了'); fillFolder(); render(); return; }
   const unsaved = ($('fEn').value.trim() || $('fJp').value.trim() || $('fZh').value.trim()) &&
     !(x.source === 'web' && $(targets(x)[0]).value.trim() === (x.text || '') && !$('fZh').value.trim());
-  const msg = unsaved ? '欄位裡還有字沒存進 Notion,確定刪除這張卡片?' : '確定刪除這張卡片?';
+  const msg = unsaved ? '欄位裡還有字沒存進 Notion，確定刪除這張卡片？' : '確定刪除這張卡片？';
   if (!confirm(msg)) return;
   await save(x, { done: true, ui: x.ui ?? null, uj: x.uj ?? null });
-  toast(pending(x) ? '卡片收起來了,匯出後才會真正刪除' : '刪掉了');
+  toast(pending(x) ? '卡片收起來了，匯出後才會真正刪除' : '刪掉了');
   await cleanup();
   const n = shown[i + 1] || shown[i - 1];
   if (n && n.id !== x.id) open(n.id); else { cur = null; close(); }
@@ -811,15 +825,26 @@ async function exportQuotes() {
   const q = qList();
   if (!q.length) { toast('沒有新的 Quote'); return; }
   for (const x of q) await prepare(x);
-  const text = q.map((x) => `- Quote｜${sourceLabel(x)}｜${sentence(x).a}`).join('\n');
-  dialog('匯出 Quote', `<pre id="qText"></pre><div class="row"><button class="small" id="qCopy" style="background:var(--red);color:var(--on-red)">複製</button></div>`);
+  const lines = q.map((x) => `Quote｜${sourceLabel(x)}｜${sentence(x).a}`);
+  const text = lines.join('\n');
+  // Daily收集箱 會在第一行前面加「- 時間 |」，其餘每句前面補「- 」讓它們也是清單項目
+  const dailyText = lines.join('\n- ');
+  dialog('匯出 Quote', `<pre id="qText"></pre><div class="row"><button class="small" id="qCopy">複製</button><button class="small" id="qDaily" style="background:var(--red);color:var(--on-red)">存進當天筆記</button></div>`);
   $('qText').textContent = text;
-  $('qCopy').onclick = async () => {
-    try { await navigator.clipboard.writeText(text); } catch { toast('複製失敗,請手動選取'); return; }
+  const markDone = async () => {
     q.forEach((x) => (x.quoteExported = true));
     await send('/captures', 'PATCH', q.map((x) => ({ id: x.id, quoteExported: true }))).catch(() => {});
     await cleanup();
-    $('dlg').close(); toast(`複製了 ${q.length} 句`); render();
+    $('dlg').close(); render();
+  };
+  $('qCopy').onclick = async () => {
+    try { await navigator.clipboard.writeText(text); } catch { toast('複製失敗，請手動選取'); return; }
+    await markDone(); toast(`複製了 ${q.length} 句`);
+  };
+  // 交給捷徑「Daily收集箱」，選「紀錄」就會存進當天的 Obsidian 筆記
+  $('qDaily').onclick = async () => {
+    await markDone();
+    location.href = 'shortcuts://run-shortcut?name=' + encodeURIComponent('Daily收集箱') + '&input=text&text=' + encodeURIComponent(dailyText);
   };
 }
 
@@ -864,12 +889,12 @@ async function exportPlurk() {
     g.filter((x) => x.image).forEach((x) => loadImg(x.id).then((u) => { const im = new Image(); im.src = u; im.alt = ''; $('th' + i)?.appendChild(im); }).catch(() => {}));
     $('pi' + i).onclick = () => saveImages(g);
     $('pc' + i).onclick = async () => {
-      try { await navigator.clipboard.writeText(text); } catch { toast('複製失敗,請手動選取'); return; }
+      try { await navigator.clipboard.writeText(text); } catch { toast('複製失敗，請手動選取'); return; }
       g.forEach((x) => (x.plurkExported = true));
       await send('/captures', 'PATCH', g.map((x) => ({ id: x.id, plurkExported: true }))).catch(() => {});
       await cleanup();
       $('pc' + i).textContent = '已複製'; $('pc' + i).disabled = true;
-      toast('複製了,記得存圖'); render();
+      toast('複製了，記得存圖'); render();
     };
   });
 }
@@ -889,7 +914,7 @@ $('setSave').onclick = async () => {
   store.set('url', BASE); store.set('pass', PASS);
   settings.games = $('gGames').value.split('\n').map((l) => { const i = l.indexOf('='); return i < 0 ? null : { name: l.slice(0, i).trim(), tags: l.slice(i + 1).trim() }; }).filter((g) => g && g.name);
   settings.sources = $('gSources').value.split(/[,，]/).map((s) => s.trim()).filter(Boolean);
-  try { await send('/meta/settings', 'PUT', settings); toast('已儲存'); } catch (e) { toast('儲存失敗:' + e.message); }
+  try { await send('/meta/settings', 'PUT', settings); toast('已儲存'); } catch (e) { toast('儲存失敗：' + e.message); }
   $('setDlg').close(); if (cur) fillFolder();
 };
 
@@ -906,7 +931,7 @@ $('folder').addEventListener('touchend', (e) => {
   else if (dy > 90 && $('scroll').scrollTop <= 0 && Math.abs(dy) > Math.abs(dx) * 1.5) close();
 }, { passive: true });
 $('shot').onclick = () => window.open($('shot').src, '_blank');
-// 寬螢幕:資料夾固定在右側,上緣貼著篩選列下方,按鈕永遠看得到
+// 寬螢幕:資料夾固定在右側，上緣貼著篩選列下方，按鈕永遠看得到
 function placeFolder() {
   const top = Math.max($('bar').getBoundingClientRect().bottom + 12, 12);
   document.documentElement.style.setProperty('--ftop', top + 'px');
@@ -915,7 +940,7 @@ addEventListener('scroll', placeFolder, { passive: true });
 addEventListener('resize', placeFolder);
 new IntersectionObserver(([en]) => $('bar').classList.toggle('collapsed', !en.isIntersecting), { rootMargin: '-60px 0px 0px 0px' }).observe($('cover'));
 
-// 舊版收集的資料沒有 source、videoId,這裡補上
+// 舊版收集的資料沒有 source、videoId，這裡補上
 function normalize(x, i) {
   const y = { added: [], ocr: [], ...x, color: i % 5 };
   if (!y.source) y.source = y.type === 'netflix' || y.type === 'ocr' ? 'drama' : 'web';
@@ -934,14 +959,14 @@ async function boot() {
     items = caps.map((x, i) => normalize(x, i));
     $('setup').hidden = true; $('app').hidden = false;
     await cleanup();
-    // 先把會出現在列表上的美劇卡準備好(對字幕)
+    // 先把會出現在列表上的美劇卡準備好（對字幕）
     await Promise.all(live().filter((x) => x.source === 'drama').map((x) => prepare(x).catch(() => {})));
     render(); placeFolder();
     if (matchMedia('(min-width:1000px)').matches && live()[0]) open(live()[0].id);
   } catch (e) {
     $('app').hidden = true; $('setup').hidden = false;
     $('sUrl').value = BASE; $('sPass').value = PASS;
-    $('sMsg').textContent = BASE ? '連不上:' + e.message : '';
+    $('sMsg').textContent = BASE ? '連不上：' + e.message : '';
   }
 }
 $('sSave').onclick = () => {
